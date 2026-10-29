@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
 	import CliSymlinkSetup from "$components/settings/CliSymlinkSetup.svelte";
+	import GbLanguageSettingsCard from "$components/settings/language/GbLanguageSettingsCard.svelte";
 	import AccessTokenSignIn from "$components/shared/AccessTokenSignIn.svelte";
 	import { BACKEND } from "$lib/backend";
 	import { getUserErrorCode } from "$lib/backend/ipc";
@@ -256,6 +257,8 @@
 		</CardGroup.Item>
 	{/if}
 </CardGroup>
+
+<GbLanguageSettingsCard />
 
 <CardGroup>
 	<CardGroup.Item labelFor="disable-auto-checks">

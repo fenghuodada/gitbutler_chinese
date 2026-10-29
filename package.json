@@ -81,7 +81,8 @@
 		"svelte-eslint-parser": "^1.6.0",
 		"turbo": "2.9.14",
 		"typescript": "catalog:",
-		"typescript-eslint": "^8.57.1"
+		"typescript-eslint": "^8.57.1",
+		"svelte": "catalog:svelte"
 	},
 	"devEngines": {
 		"runtime": {

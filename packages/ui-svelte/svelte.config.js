@@ -1,9 +1,10 @@
 import staticAdapter from "@sveltejs/adapter-static";
 import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
+import { gbI18nPreprocessor } from "../../scripts/i18n/preprocessor.mjs";
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-	preprocess: vitePreprocess(),
+	preprocess: [gbI18nPreprocessor(), vitePreprocess()],
 	kit: {
 		adapter: staticAdapter({
 			pages: "build",

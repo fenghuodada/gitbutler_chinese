@@ -1,9 +1,10 @@
 import svelteInjectComment from "@gitbutler/svelte-comment-injector";
 import staticAdapter from "@sveltejs/adapter-static";
 import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
+import { gbI18nPreprocessor } from "../../scripts/i18n/preprocessor.mjs";
 
 const config = {
-	preprocess: [vitePreprocess({ script: true }), svelteInjectComment()],
+	preprocess: [gbI18nPreprocessor(), vitePreprocess({ script: true }), svelteInjectComment()],
 	kit: {
 		alias: {
 			$components: "./src/components",
