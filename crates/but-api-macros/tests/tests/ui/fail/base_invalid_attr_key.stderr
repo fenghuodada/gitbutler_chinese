@@ -1,0 +1,5 @@
+error: Expected `try_from = Type`, `provides = [Tag, ..]`, or `invalidates = [Tag, ..]`
+ --> tests/ui/fail/base_invalid_attr_key.rs:8:11
+  |
+8 | #[but_api(from = json::HexHash)]
+  |           ^^^^

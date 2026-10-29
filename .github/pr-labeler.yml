@@ -1,0 +1,41 @@
+# https://github.com/actions/labeler#basic-examples
+
+rust:
+  - changed-files:
+      - any-glob-to-any-file: crates/**/*
+
+CLI:
+  - changed-files:
+      - any-glob-to-any-file: crates/but/**/*
+
+GPUI:
+  - changed-files:
+      - any-glob-to-any-file: crates/but-gpui/**/*
+
+"@gitbutler/desktop":
+  - changed-files:
+      - any-glob-to-any-file: apps/desktop/**/*
+
+"@gitbutler/web":
+  - changed-files:
+      - any-glob-to-any-file: apps/web/**/*
+
+"@gitbutler/lite":
+  - changed-files:
+      - any-glob-to-any-file: apps/lite/**/*
+
+"@gitbutler/ui-svelte":
+  - changed-files:
+      - any-glob-to-any-file: packages/ui-svelte/**/*
+
+"@gitbutler/ui-react":
+  - changed-files:
+      - any-glob-to-any-file: packages/ui-react/**/*
+
+"@gitbutler/no-relative-imports":
+  - changed-files:
+      - any-glob-to-any-file: packages/no-relative-imports/**/*
+
+CSS:
+  - changed-files:
+      - any-glob-to-any-file: "**/*.css"

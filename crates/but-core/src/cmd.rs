@@ -1,0 +1,91 @@
+use std::{ffi::OsString, path::PathBuf, process::Stdio};
+
+use bstr::BStr;
+use tracing::instrument;
+
+/// Launch the login shell and try to extract their environment variables, or `None` if the shell couldn't be determined,
+/// or if it couldn't be launched, or if the environment extraction failed.
+#[instrument()]
+pub fn extract_interactive_login_shell_environment() -> Option<Vec<(OsString, OsString)>> {
+    // NOTE that `SHELL` isn't usually set on Windows, so this will not usually run there.
+    let shell_path: PathBuf = std::env::var_os("SHELL")?.into();
+    let stdout = std::process::Command::try_from(
+        // This automatically prevents a Window from popping up on Windows.
+        gix::command::prepare(shell_path)
+            .args(["-i", "-l", "-c", "env"])
+            .stderr(Stdio::null()),
+    )
+    .ok()?
+    .output()
+    .ok()?
+    .stdout;
+
+    let vars = parse_key_value_pairs(stdout.as_slice());
+    (!vars.is_empty()).then_some(vars)
+}
+
+/// Parse `a=b\n` input and convert these into OsStrings for later consumption
+fn parse_key_value_pairs<'a>(input: impl Into<&'a BStr>) -> Vec<(OsString, OsString)> {
+    use bstr::ByteSlice;
+    let mut out = Vec::new();
+    for line in input.into().lines() {
+        let mut tokens = line.splitn(2, |b| b == &b'=');
+        let (key, value) = (tokens.next(), tokens.next());
+        match (key, value) {
+            (Some(key), Some(value)) => {
+                let kv = (
+                    gix::path::from_byte_slice(key),
+                    gix::path::from_byte_slice(value),
+                );
+                if let (Ok(key), Ok(value)) = kv {
+                    out.push((key.into(), value.into()));
+                }
+            }
+            _ => continue,
+        }
+    }
+    out
+}
+
+#[cfg(test)]
+mod extract_login_shell_command {
+    use std::ffi::OsString;
+
+    use super::parse_key_value_pairs;
+
+    #[test]
+    fn parse_key_value_pairs_various_inputs() {
+        let one_line_missing_newline = "a=b";
+        assert_eq!(
+            parse_key_value_pairs(one_line_missing_newline),
+            osvec(Some(("a", "b")))
+        );
+
+        let value_with_equal_sign = "a=b=c";
+        assert_eq!(
+            parse_key_value_pairs(value_with_equal_sign),
+            osvec(Some(("a", "b=c")))
+        );
+
+        let multi_line = "a=b\nkey=value\n";
+        assert_eq!(
+            parse_key_value_pairs(multi_line),
+            osvec([("a", "b"), ("key", "value")])
+        );
+
+        let multi_line_missing_trailing_newline = "a=b\nkey=value";
+        assert_eq!(
+            parse_key_value_pairs(multi_line_missing_trailing_newline),
+            osvec([("a", "b"), ("key", "value")])
+        );
+    }
+
+    fn osvec(
+        pairs: impl IntoIterator<Item = (&'static str, &'static str)>,
+    ) -> Vec<(OsString, OsString)> {
+        pairs
+            .into_iter()
+            .map(|(k, v)| (k.into(), v.into()))
+            .collect()
+    }
+}
