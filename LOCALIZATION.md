@@ -37,6 +37,12 @@ OS=windows pnpm exec tauri build --features windows \
 
 产物：`target/release/bundle/msi/GitButler 中文版_<version>_x64_zh-CN.msi`。
 
+> 本 fork 在 `crates/gitbutler-tauri/build.rs` 里为**所有** Windows 构建添加了
+> `/STACK:8388608`（上游只在 `builtin-gpui` 时添加）。Windows 主线程默认只有
+> 1 MB 栈，Tauri 在主线程 WebView 消息循环里 `tokio::spawn` 命令，push 这类
+> future 很大（~212 KB），没有 8 MB 栈时会在点 Push 时栈溢出、进程无提示退出。
+> 合并上游时不要丢掉这段，否则“点 push 闪退”会复发。
+
 `tauri-before-build-command.sh production` 会先构建前端、`but` 和
 `gitbutler-git-askpass`，然后注入 external binaries。`turbo.json` 的
 `globalDependencies` 包含 `scripts/i18n/**`，修改词典会正确触发前端重建。

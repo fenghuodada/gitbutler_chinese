@@ -32,20 +32,27 @@ fn main() {
     };
     println!("cargo:rustc-env=IDENTIFIER={identifier}");
 
+    let is_windows_target = std::env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("windows");
+
+    // Windows gives the main thread 1 MB of stack where macOS gives 8. Tauri spawns async
+    // commands from the webview's message loop on the main thread, and `tokio::spawn` materializes
+    // the command's future on the caller's stack, so commands with large futures (e.g. push, at
+    // ~212 KB) exhaust it. The GPUI client below asks for 8 MB; do the same in every Windows build
+    // so the desktop app doesn't die with a stack overflow when such a command is invoked.
+    if is_windows_target {
+        println!("cargo:rustc-link-arg-bins=/STACK:8388608");
+    }
+
     // The native client brings GPUI, which links its own manifest into every binary, one with all
     // Tauri's has, and a binary may have only one. Its window takes the icon in resource 1, where
-    // Tauri puts its own at 32512, and its UI runs on the main thread, which Windows gives 1 MB of
-    // stack where macOS gives 8.
-    if std::env::var_os("CARGO_FEATURE_BUILTIN_GPUI").is_some()
-        && std::env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("windows")
-    {
+    // Tauri puts its own at 32512.
+    if std::env::var_os("CARGO_FEATURE_BUILTIN_GPUI").is_some() && is_windows_target {
         let channel = identifier
             .strip_prefix("com.gitbutler.app.")
             .unwrap_or("release");
         let icon = manifest_dir.join("icons").join(channel).join("icon.ico");
         let windows = tauri_build::WindowsAttributes::new_without_app_manifest()
             .append_rc_content(format!("1 ICON {:?}", icon.display().to_string()));
-        println!("cargo:rustc-link-arg-bins=/STACK:8388608");
         tauri_build::try_build(tauri_build::Attributes::new().windows_attributes(windows))
             .unwrap_or_else(|err| panic!("{err:#}"));
     } else {

@@ -166,12 +166,15 @@ export function collectMarkupMessages(content, filename) {
 			const msg = norm(value[0].data);
 			if (!msg || !/[A-Za-z]/.test(msg)) continue;
 			if (KEYS.has(msg)) {
+				// Replace the whole attribute, quotes included: Svelte warns about quoted
+				// attributes holding expressions on components and will read them as string
+				// literals in a future version. `name={...}` stays an expression.
 				runs.push({
 					kind: "translated",
-					start: value[0].start,
-					end: value[0].end,
+					start: attribute.start,
+					end: attribute.end,
 					message: msg,
-					text: `{__gb_t(${JSON.stringify(msg)})}`,
+					text: `${attribute.name}={__gb_t(${JSON.stringify(msg)})}`,
 				});
 			} else {
 				runs.push({ kind: "missing", start: value[0].start, end: value[0].end, message: msg });
